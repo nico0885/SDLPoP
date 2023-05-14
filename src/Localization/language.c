@@ -46,15 +46,9 @@ void select_language_img(enum localization loc,
 	default:
 		strncpy(lang_append, "", sizeof(lang_append)); break;
 	}
-	
-#if SCALE == 1
-	char data_dir[] = "data";
-#else
-	char data_dir[] = "data_2x";
-#endif
 
 	// First check if there is a file specific to the selected language
-	snprintf_check(image_filename,image_filename_size,"%s/%s/res%d%s.%s",data_dir, filename_no_ext, resource_id, lang_append, extension);
+	snprintf_check(image_filename,image_filename_size,"%s/%s/res%d%s.%s",version_data_dir,filename_no_ext, resource_id, lang_append, extension);
 
 	// try to open the file to check if it exists
 	FILE* fp = fopen(locate_file(image_filename), "rb");
@@ -63,7 +57,7 @@ void select_language_img(enum localization loc,
 	}
 	else {
 		// Specific file does not exist - fallback to regular file
-		snprintf_check(image_filename,image_filename_size,"%s/%s/res%d.%s",data_dir, filename_no_ext, resource_id, extension);
+		snprintf_check(image_filename,image_filename_size,"%s/%s/res%d.%s",version_data_dir,filename_no_ext, resource_id, extension);
 	}
 	return;
 }

@@ -4,6 +4,7 @@ FILE(
     GLOB_RECURSE
     data_dos_file
     data/*
+    data_2x/*
 )
 
 add_custom_target(Data_DOS

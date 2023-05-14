@@ -183,6 +183,20 @@ static int global_ini_callback(const char *section, const char *name, const char
 			return 1;
 		}
 
+		// Version selection
+		if (strcasecmp(name, "version") == 0) {
+			if (strcmp(value, "MAC") == 0) {
+				pop_version = 2;
+				graphic_scale = 2;
+				strncpy(version_data_dir, "data_2x", POP_MAX_PATH);
+			}
+			else { // defaults to DOS
+				pop_version = 1;
+				graphic_scale = 1;
+				strncpy(version_data_dir, "data", POP_MAX_PATH);
+			}
+		}
+
 #ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
 #endif
