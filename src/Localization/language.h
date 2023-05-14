@@ -18,20 +18,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
-#include "common.h"
+#ifndef LANGUAGE_H
+#define LANGUAGE_H
 
+enum localization {
+	EN = 0,
+	FR,
+	DE
+};
 
-#ifdef __amigaos4__
-static const char version[] = "\0$VER: SDLPoP " SDLPOP_VERSION " (" __AMIGADATE__ ")";
-static const char stack[] = "$STACK:200000";
+enum localization set_language_param(const char *value);
+
+void select_language_img(enum localization loc,
+						 char* image_filename, size_t image_filename_size,
+						 const char* filename_no_ext, int resource_id, const char* extension);
+
 #endif
-
-
-int main(int argc, char *argv[])
-{
-	g_argc = argc;
-	g_argv = argv;
-	pop_main();
-	return 0;
-}
-

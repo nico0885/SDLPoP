@@ -19,6 +19,8 @@ The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
+#include "Localization/legacy_ingame_texts.h"
+
 #include <setjmp.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -371,12 +373,7 @@ const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
-	if (!use_custom_levelset) {
-		return quick_file;
-	}
-	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
-	return custom_path_buffer;
+	return get_writable_file_path(custom_path_buffer, max_len, quick_file /*QUICKSAVE.SAV*/ );
 }
 
 int quick_save(void) {
@@ -970,7 +967,9 @@ void draw_game_frame() {
 					erase_bottom_text(0);
 				} else {
 					if (blink_frame == 3) {
-						display_text_bottom("Press Button to Continue");
+						char sprintf_temp[40];
+						str_pressbutton(pop_language, sprintf_temp, sizeof(sprintf_temp));
+						display_text_bottom(sprintf_temp);
 						play_sound_from_buffer(sound_pointers[sound_38_blink]); // press button blink
 					}
 				}
@@ -1707,7 +1706,9 @@ int do_paused() {
 				check_sound_playing()) {
 			stop_sounds();
 		}
-		display_text_bottom("GAME PAUSED");
+		char sprintf_temp[40];
+		str_pause(pop_language, sprintf_temp, sizeof(sprintf_temp));
+		display_text_bottom(sprintf_temp);
 #ifdef USE_MENU
 		if (enable_pause_menu || is_menu_shown) {
 			draw_menu();
@@ -2058,12 +2059,7 @@ void load_kid_sprite() {
 const char* save_file = "PRINCE.SAV";
 
 const char* get_save_path(char* custom_path_buffer, size_t max_len) {
-	if (!use_custom_levelset) {
-		return save_file;
-	}
-	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, save_file /*PRINCE.SAV*/ );
-	return custom_path_buffer;
+	return get_writable_file_path(custom_path_buffer, max_len, save_file /*PRINCE.SAV*/ );
 }
 
 // seg000:1D45
@@ -2086,10 +2082,13 @@ void save_game() {
 		}
 	}
 
+	char sprintf_temp[40];
 	if (success) {
-		display_text_bottom("GAME SAVED");
+		str_save(pop_language, sprintf_temp, sizeof(sprintf_temp));
+		display_text_bottom(sprintf_temp);
 	} else {
-		display_text_bottom("UNABLE TO SAVE GAME");
+		str_unable_save(pop_language, sprintf_temp, sizeof(sprintf_temp));
+		display_text_bottom(sprintf_temp);
 		//play_sound_from_buffer(&sound_cant_save);
 	}
 	text_time_remaining = 24;
@@ -2256,15 +2255,12 @@ void show_copyprot(int where) {
 		text_time_total = 1188;
 		text_time_remaining = 1188;
 		is_show_time = 0;
-		snprintf(sprintf_temp, sizeof(sprintf_temp),
-			"WORD %d LINE %d PAGE %d",
-			copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
+		str_copy_protection_bottom(pop_language, sprintf_temp, sizeof(sprintf_temp),
+								   copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
 		display_text_bottom(sprintf_temp);
 	} else {
-		snprintf(sprintf_temp, sizeof(sprintf_temp),
-			"Drink potion matching the first letter of Word %d on Line %d\n"
-			"of Page %d of the manual.",
-			copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
+		str_copy_protection_dialog(pop_language, sprintf_temp, sizeof(sprintf_temp),
+								   copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
 		show_dialog(sprintf_temp);
 	}
 #endif
@@ -2272,7 +2268,9 @@ void show_copyprot(int where) {
 
 // seg000:2489
 void show_loading() {
-	show_text(&screen_rect, halign_center, valign_middle, "Loading. . . .");
+	char sprintf_temp[140];
+	str_loading(pop_language, sprintf_temp, sizeof(sprintf_temp));
+	show_text(&screen_rect, halign_center, valign_middle, sprintf_temp);
 	update_screen();
 }
 
@@ -2377,5 +2375,51 @@ void show_splash() {
 	key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD; // don't immediately start the game if Shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD;
 #endif
+}
+
+const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name) {
+	// If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
+	// Otherwise, save to the home directory
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+	const char* save_path = getenv("SDLPOP_SAVE_PATH");
+#else
+	char save_path[POP_MAX_PATH];
+	const char* custom_save_path = getenv("SDLPOP_SAVE_PATH");
+	const char* home_path = getenv("HOME");
+	if (custom_save_path != NULL && custom_save_path[0] != '\0')
+		snprintf_check(save_path, max_len, "%s", custom_save_path);
+	else if (home_path != NULL && home_path[0] != '\0')
+		snprintf_check(save_path, max_len, "%s/.%s", home_path, POP_DIR_NAME);
+	else // save_path might not be initialized
+		save_path[0] = '\0';
+#endif
+
+	if (save_path[0] != '\0') {
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+		mkdir (save_path);
+#else
+		mkdir (save_path, 0700);
+#endif
+		if (use_custom_levelset) {
+			// First create the directory...
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, levelset_name);
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+			mkdir (custom_path_buffer);
+#else
+			mkdir (custom_path_buffer, 0700);
+#endif
+			snprintf_check(custom_path_buffer, max_len, "%s/%s/%s", save_path, levelset_name, file_name);
+		} else {
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, file_name);
+		}
+		return custom_path_buffer;
+	}
+
+	if (!use_custom_levelset) {
+		return file_name;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, file_name);
+	return custom_path_buffer;
 }
 

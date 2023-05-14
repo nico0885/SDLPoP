@@ -19,8 +19,13 @@ The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
+#include "Localization/language.h"
 #include <ctype.h>
-#include <inttypes.h>
+#ifdef __amigaos4__
+	#define strtoimax(a,b,c) strtoll(a,b,c)
+#else
+	#include <inttypes.h>
+#endif
 
 
 void turn_fixes_and_enhancements_on_off(byte new_state) {
@@ -171,6 +176,13 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (ini_process_boolean(name, value, option_name, target)) return 1;
 
 	if (check_ini_section("General")) {
+
+		// Language selection
+		if (strcasecmp(name, "language") == 0) {
+			pop_language = set_language_param(value);
+			return 1;
+		}
+
 #ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
 #endif

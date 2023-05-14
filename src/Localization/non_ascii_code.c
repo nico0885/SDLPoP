@@ -18,20 +18,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
-#include "common.h"
+#include <stdbool.h>
+#include <string.h>
 
+#include "non_ascii_code.h"
 
-#ifdef __amigaos4__
-static const char version[] = "\0$VER: SDLPoP " SDLPOP_VERSION " (" __AMIGADATE__ ")";
-static const char stack[] = "$STACK:200000";
-#endif
-
-
-int main(int argc, char *argv[])
-{
-	g_argc = argc;
-	g_argv = argv;
-	pop_main();
-	return 0;
+bool is_letter(const char* letter, const char* text, int* nb_bytes) {
+	*nb_bytes = (int) strlen(letter);
+	return strncmp(letter, text, *nb_bytes) == 0;
 }
 
+byte get_non_ascii_code(const char* text, int* nb_bytes) {
+	if ((byte) *text <= 127) {
+		*nb_bytes = 1;
+		return (byte) *text;
+	}
+
+	if (is_letter("à", text, nb_bytes)) return 132;
+	if (is_letter("é", text, nb_bytes)) return 133;
+	if (is_letter("è", text, nb_bytes)) return 134;
+	if (is_letter("ü", text, nb_bytes)) return 135;
+
+	*nb_bytes = 1;
+	return 32;	// Default to space
+}

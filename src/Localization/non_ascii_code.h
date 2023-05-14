@@ -18,20 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
-#include "common.h"
+#ifndef NON_ASCII_CODE_H
+#define NON_ASCII_CODE_H
 
+#include "../types.h"
 
-#ifdef __amigaos4__
-static const char version[] = "\0$VER: SDLPoP " SDLPOP_VERSION " (" __AMIGADATE__ ")";
-static const char stack[] = "$STACK:200000";
+byte get_non_ascii_code(const char* text, int* nb_bytes);
+
 #endif
-
-
-int main(int argc, char *argv[])
-{
-	g_argc = argc;
-	g_argv = argv;
-	pop_main();
-	return 0;
-}
-

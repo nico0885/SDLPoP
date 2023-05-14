@@ -18,6 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
+#ifndef PROTO_H
+#define PROTO_H
+
+#include "common.h"
+
 // SEG000.C
 void pop_main(void);
 void init_game_main(void);
@@ -78,6 +83,7 @@ void show_splash(void);
 void check_quick_op(void);
 void restore_room_after_quick_load(void);
 #endif // USE_QUICKSAVE
+const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name);
 
 // SEG001.C
 int proc_cutscene_frame(int wait_frames);
@@ -518,7 +524,9 @@ image_type* get_image(short chtab_id, int id);
 void sdlperror(const char* header);
 bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
+#define locate_save_file(filename) locate_save_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
+const char* locate_save_file_(const char* filename, char* path_buffer, int buffer_size);
 
 #ifdef _WIN32
 
@@ -727,3 +735,5 @@ void stop_midi(void);
 void init_midi(void);
 void midi_callback(void *userdata, Uint8 *stream, int len);
 void play_midi_sound(sound_buffer_type* buffer);
+
+#endif
